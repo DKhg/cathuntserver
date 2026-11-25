@@ -1,0 +1,36 @@
+server:
+  port: ${SERVER_PORT:8090}   # 게임 서버 포트. 8080은 MCP for Unity가 쓰므로 피한다. Unity ServerConfig와 같아야 한다
+
+spring:
+  application:
+    name: catHuntServer
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}   # 개발=local, 운영=prod (환경변수로 바꾼다)
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/cathunt}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USER:hong}
+    password: ${DB_PASSWORD}      # 기본값 없음 — 비밀값은 커밋에 안 둔다. 개발은 application-local.yaml(.gitignore), 운영은 환경변수
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}         # 기본값 없음 — 환경변수/프로필로만 준다(32바이트 이상)
+    expire-minutes: ${JWT_EXPIRE_MINUTES:1440}   # 토큰 유효 24시간(만료되면 기기 키로 재로그인)
+  new-account:
+    paw-jelly: 0              # 새 계정 시작 분홍 젤리(발바닥). 실제론 한 판 보상으로 모음
+    start-level: 1
+    starter-cat: cheese       # 새 계정에 기본 지급할 고양이(= 대표 고양이 초기값)
+  gacha:                      # 뽑기 기준 데이터(서버가 원본). GET /master로 내려주고 뽑기 계산에 쓴다
+    cost: 100                 # 1회 뽑기 비용(분홍 젤리)
+    dupe-refund-percent: 50   # 중복이면 비용의 이 %를 발바닥으로 환급
+    weights:                  # 등급 확률 가중치(흔한/귀한/전설)
+      common: 70
+      rare: 25
+      legend: 5
+  play:                       # 한 판 보상 기준 데이터(서버가 계산). 쥐 1마리당 보상·레벨표
+    paw-per-catch: 5          # 쥐 1마리당 분홍 젤리
+    exp-per-catch: 4          # 쥐 1마리당 경험치
+    max-catch: 500            # 한 판에서 인정하는 최대 포획 수(비정상 값 방어)
+    exp-to-next-level: [100]  # 레벨별 다음 레벨 필요 경험치(표 끝을 넘으면 마지막 값 사용)
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}   # 쉼표 구분. 비면 교차 출처 허용 안 함(모바일 클라는 CORS 불필요)
