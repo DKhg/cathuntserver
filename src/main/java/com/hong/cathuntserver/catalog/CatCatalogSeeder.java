@@ -17,22 +17,22 @@ public class CatCatalogSeeder implements CommandLineRunner {
     }
 
     // CommandLineRunner라서 서버가 다 뜬 직후 이 run()이 한 번 자동 실행된다.
-    // 카탈로그 12마리를 넣되, 이미 있는 code는 건너뛰어 재시작 때 중복/덮어쓰기를 막는다.
+    // MVP 7마리를 넣되, 이미 있는 code는 건너뛰어 재시작 때 중복/덮어쓰기를 막는다.
+    // ⚠️ 여기 목록이 Unity GachaConfig.asset과 "정확히 같은 7종"이어야 한다. 예전엔 12마리였는데,
+    //    목록이 많으면 서버 재시작 때마다 빠진 고양이를 도로 넣어 뽑기에 7종 밖 고양이가 나온다.
     @Override
     public void run(String... args) {
         List<CatDef> catalog = List.of(
-            new CatDef("cheese",            "치즈냥",   Rarity.COMMON, 1),
-            new CatDef("calico",            "삼색냥",   Rarity.COMMON, 2),
-            new CatDef("black",             "까망냥",   Rarity.COMMON, 3),
-            new CatDef("white",             "흰둥냥",   Rarity.COMMON, 4),
-            new CatDef("graytabby",         "회색냥",   Rarity.COMMON, 5),
-            new CatDef("tuxedo",            "턱시도냥", Rarity.COMMON, 6),
-            new CatDef("siamese",           "샴냥",     Rarity.RARE,   7),
-            new CatDef("scottishfold",      "스코냥",   Rarity.RARE,   8),
-            new CatDef("americanshorthair", "아메숏냥", Rarity.RARE,   9),
-            new CatDef("persian",           "페르시안냥", Rarity.RARE, 10),
-            new CatDef("bengal",            "벵갈냥",   Rarity.LEGEND, 11),
-            new CatDef("ragdoll",           "래그돌냥", Rarity.LEGEND, 12)
+            // 흔한 냥 4
+            new CatDef("cheese",       "치즈냥", Rarity.COMMON, 1),
+            new CatDef("calico",       "삼색냥", Rarity.COMMON, 2),
+            new CatDef("white",        "흰둥냥", Rarity.COMMON, 3),
+            new CatDef("graytabby",    "회색냥", Rarity.COMMON, 4),
+            // 귀한 냥 2
+            new CatDef("scottishfold", "스코냥", Rarity.RARE,   5),
+            new CatDef("bengal",       "벵갈냥", Rarity.RARE,   6),
+            // 전설의 냥 1
+            new CatDef("siamese",      "샴냥",   Rarity.LEGEND, 7)
         );
         for (CatDef c : catalog) {
             if (!cats.existsById(c.getCode())) {
