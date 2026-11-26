@@ -1,6 +1,6 @@
 #!/bin/bash
 # EC2 첫 부팅 시 1회 실행. Docker 설치 → compose 파일/비밀값 작성 → db·caddy 기동.
-# 앱 이미지는 아직 ECR에 없으므로, 첫 배포(deploy.ps1)에서 push 후 app 컨테이너가 뜬다.
+# app 이미지는 ghcr에 있다. 첫 CI/CD 실행(또는 deploy.ps1)이 서버에서 pull 하면 app 컨테이너가 뜬다.
 # 주의: 이 파일은 Terraform templatefile 이 먼저 치환한다(대괄호 변수). bash 변수는 반드시 중괄호 없이 $VAR 로 쓴다.
 set -euxo pipefail
 
@@ -89,6 +89,6 @@ volumes:
 COMPOSE
 chmod 600 /opt/cathunt/docker-compose.yml
 
-# --- db·caddy 먼저 기동 (app 이미지는 첫 배포 때 deploy.ps1 이 docker load 로 넣는다) ---
+# --- db·caddy 먼저 기동 (app 은 첫 CI/CD가 ghcr에서 pull 할 때 뜬다) ---
 cd /opt/cathunt
 docker compose up -d db caddy

@@ -1,14 +1,18 @@
 # ───────────────────────────────────────────────────────────────────────
-# 서버 자동 배포 (CI/CD) — main 에 push 하면: 이미지 빌드 → EC2 서버로 전송 → 재시작
-# deploy.ps1 이 손으로 하던 일을 GitHub 가 대신한다.
+# 서버 자동 배포 (CI/CD) — main 에 push 하면:
+#   GitHub가 이미지 빌드 → ghcr.io(무료 레지스트리)에 push → AWS 서버가 pull 해서 실행
+# (네 PC·Docker Desktop 안 씀. 전부 GitHub 클라우드에서.)
 #
-# ★ 쓰기 전에 Codemagic 아님, GitHub 저장소 설정에서 "Secrets" 2개 등록:
-#   Settings > Secrets and variables > Actions > New repository secret
-#     - SERVER_IP        : terraform 출력의 server_ip (예: 3.35.x.x)
-#     - SSH_PRIVATE_KEY  : infra/terraform/cathunt-key.pem 파일 "내용 전체" 복붙
+# ★ GitHub 저장소 Settings > Secrets and variables > Actions 에 2개 등록:
+#     - SERVER_IP        : terraform output 의 server_ip
+#     - SSH_PRIVATE_KEY  : infra/terraform/cathunt-key.pem 파일 "내용 전체"
+#   (ghcr push는 자동 GITHUB_TOKEN 사용 → 별도 키 불필요)
 #
-# ⚠️ 서버가 먼저 떠 있어야 함(terraform apply + 첫 deploy.ps1 1회). 그 뒤부터 자동.
-#    Secrets 없거나 서버 없으면 이 워크플로는 실패(빨간 X)만 뜨고 아무 피해 없음.
+# ★ 최초 1회: 첫 실행으로 ghcr 패키지가 생기면 → GitHub > Packages > cathunt
+#   > Package settings > Change visibility > Public 으로 바꾼다
+#   (그래야 서버가 로그인 없이 pull 가능. 비공개로 두려면 서버에 ghcr 토큰 로그인 필요)
+#
+# ⚠️ 서버가 먼저 떠 있어야(terraform apply) 서버 pull 단계가 성공한다.
 # ───────────────────────────────────────────────────────────────────────
 name: Deploy server
 
@@ -16,22 +20,33 @@ on:
   push:
     branches: [ main ]
     paths-ignore:
-      - '**.md'          # 문서만 바뀌면 배포 안 함
-      - 'infra/**'       # 인프라(terraform)는 로컬에서 apply (여기선 앱만 배포)
-  workflow_dispatch: {}  # GitHub 화면에서 수동 실행 버튼도 제공
+      - '**.md'
+      - 'infra/**'
+  workflow_dispatch: {}
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest   # GitHub 제공 리눅스(amd64) = EC2(t3.small x86_64)와 아키텍처 일치
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write        # ghcr.io push 권한
     steps:
-      - name: 코드 받기
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 앱 이미지 빌드
-        run: docker build -t cathunt:latest .
+      - name: 이미지 이름 (ghcr는 소문자만)
+        run: echo "IMAGE=ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/cathunt" >> "$GITHUB_ENV"
 
-      - name: 이미지를 파일로 저장(압축)
-        run: docker save cathunt:latest | gzip > cathunt-image.tar.gz
+      - name: ghcr 로그인
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 이미지 빌드 + ghcr에 push
+        run: |
+          docker build -t "$IMAGE:latest" .
+          docker push "$IMAGE:latest"
 
       - name: SSH 키 준비
         run: |
@@ -40,15 +55,11 @@ jobs:
           chmod 600 ~/.ssh/key.pem
           ssh-keyscan -H "${{ secrets.SERVER_IP }}" >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: 서버로 이미지 전송
-        run: scp -i ~/.ssh/key.pem cathunt-image.tar.gz ec2-user@${{ secrets.SERVER_IP }}:/tmp/
-
-      - name: 서버에서 적재 + 재시작
+      - name: 서버에서 pull + 재시작
         run: |
           ssh -i ~/.ssh/key.pem ec2-user@${{ secrets.SERVER_IP }} '
-            gunzip -f /tmp/cathunt-image.tar.gz &&
-            sudo docker load -i /tmp/cathunt-image.tar &&
-            rm -f /tmp/cathunt-image.tar &&
-            cd /opt/cathunt && sudo docker compose up -d &&
+            cd /opt/cathunt &&
+            sudo docker compose pull app &&
+            sudo docker compose up -d &&
             sudo docker compose ps
           '

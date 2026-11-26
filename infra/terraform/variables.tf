@@ -22,9 +22,16 @@ variable "disk_gb" {
   default     = 20
 }
 
-variable "domain_name" {
-  description = "서버 도메인 (예: api.example.com). Caddy HTTPS 자동발급에 필수"
+variable "app_image" {
+  description = "앱 컨테이너 이미지 (ghcr, 태그 제외). GitHub 오너 소문자. 예: ghcr.io/dkhg/cathunt"
   type        = string
+  default     = "ghcr.io/dkhg/cathunt"
+}
+
+variable "domain_name" {
+  description = "서버 도메인 (예: api.example.com). 비우면 서버 IP 기반 무료 주소(sslip.io) 자동 사용 — DNS 설정 불필요"
+  type        = string
+  default     = ""
 }
 
 variable "allowed_ssh_cidr" {

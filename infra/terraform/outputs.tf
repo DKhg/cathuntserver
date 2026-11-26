@@ -20,14 +20,20 @@ output "jwt_secret" {
   sensitive   = true
 }
 
+output "server_url" {
+  description = "서버 HTTPS 주소 (sslip.io 자동 또는 입력 도메인)"
+  value       = "https://${local.effective_domain}"
+}
+
 output "next_steps" {
   value = <<-EOT
 
     === 다음 순서 ===
-    1) DNS A 레코드 등록:  ${var.domain_name}  ->  ${aws_eip.this.public_ip}
-    2) 첫 배포(이미지 빌드 → 서버로 전송 → 기동):
+    서버 주소: https://${local.effective_domain}   (sslip.io 자동 — DNS 설정 불필요)
+    1) 첫 배포(이미지 빌드 → 서버로 전송 → 기동):
        powershell infra\deploy\deploy.ps1 -ServerIp ${aws_eip.this.public_ip}
-    3) 확인:  curl https://${var.domain_name}/master   (JSON 나오면 성공)
-    4) Unity ServerConfig 운영주소 = https://${var.domain_name}  (Claude에게 "운영주소 연결해줘")
+    2) 확인:  curl https://${local.effective_domain}/master   (JSON 나오면 성공)
+       (HTTPS 인증서 자동발급에 1~2분 걸릴 수 있음)
+    3) Unity ServerConfig 운영주소 = https://${local.effective_domain}  (Claude에게 "운영주소 연결해줘")
   EOT
 }
