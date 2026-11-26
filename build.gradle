@@ -23,7 +23,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     // DB 스키마 버전 관리(운영). 개발은 application-local.yaml에서 꺼 둠(ddl-auto 사용)
-    implementation 'org.flywaydb:flyway-core'
+    // ⚠️ Spring Boot 4부터 Flyway 자동설정이 별도 모듈 → starter 필요(flyway-core만으론 자동실행 안 됨)
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
     implementation 'org.flywaydb:flyway-database-postgresql'
     // JWT(로그인 토큰) — 가이드 참고
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
