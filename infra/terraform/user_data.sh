@@ -72,8 +72,8 @@ services:
   caddy:
     image: caddy:2
     restart: always
-    depends_on:
-      - app
+    # depends_on: app 은 두지 않는다 — 두면 'up -d db caddy'가 app 이미지까지 pull 시도해
+    # 부팅 때 실패한다(app은 첫 CI/CD 때 뜸). caddy는 app 없으면 잠깐 502만 낼 뿐 문제 없음.
     ports:
       - "80:80"
       - "443:443"
