@@ -1,0 +1,32 @@
+# 로컬에서 Docker로 서버+DB를 띄워 이미지가 잘 도는지 확인용. (운영 배포는 infra/ 참고)
+# 실행:  docker compose up --build       종료:  docker compose down
+# 확인:  curl http://localhost:8090/master
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hong
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-devpw}"
+      POSTGRES_DB: cathunt
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://db:5432/cathunt
+      DB_USER: hong
+      DB_PASSWORD: "${DB_PASSWORD:-devpw}"
+      JWT_SECRET: "${JWT_SECRET:-dev-secret-change-me-please-32bytes-min}"
+      SERVER_PORT: "8090"
+    ports:
+      - "8090:8090"
+
+volumes:
+  pgdata:

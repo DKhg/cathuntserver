@@ -1,0 +1,7 @@
+# 이 파일을 복사해서 terraform.tfvars 로 저장하고 값을 채운다.
+# terraform.tfvars 는 .gitignore 되어 커밋되지 않는다.
+
+domain_name      = "api.example.com"   # (필수) 서버 도메인/서브도메인. Caddy HTTPS 자동발급에 쓰임
+allowed_ssh_cidr = "0.0.0.0/0"         # 권장: 내 공인 IP/32 로 제한 (예: "1.2.3.4/32")
+aws_region       = "ap-northeast-2"    # 서울
+instance_type    = "t3.small"          # 안정 권장(2GB). 프리티어 무료로 쓰려면 "t3.micro"(1GB, OOM 위험)

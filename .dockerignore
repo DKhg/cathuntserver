@@ -1,0 +1,9 @@
+# 이미지에 넣지 않을 것(빌드는 컨테이너 안에서 새로 함)
+.git/
+.gradle/
+build/
+infra/
+.idea/
+.vscode/
+bin/
+*.md

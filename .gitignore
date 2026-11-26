@@ -39,3 +39,6 @@ out/
 ### 비밀값 — 개발용 로컬 설정은 커밋하지 않는다(DB 비번·JWT 시크릿) ###
 src/main/resources/application-local.yaml
 .env
+
+# 문서(.md)는 깃에 안 올림
+*.md

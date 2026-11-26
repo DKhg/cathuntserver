@@ -1,0 +1,9 @@
+# Terraform 상태·비밀값·키는 커밋하지 않는다
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+*.pem
+crash*.log
